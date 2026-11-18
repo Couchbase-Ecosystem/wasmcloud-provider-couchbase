@@ -33,10 +33,8 @@ type Handler struct {
 	// All components linked to this provider and their config.
 	// linkedFrom map[string]map[string]string
 
-	// Map that stores couchbase cluster connections
-	// The map is of the following structure:
-	// sourceID -> linkName -> collection connection
-	clusterConnections map[string]map[string]*gocb.Collection
+	// Couchbase collections for each linked component, keyed by source ID and link name
+	links *linkedCollections
 }
 
 func (h *Handler) Get(ctx context.Context, id string, options *document.DocumentGetOptions) (*wrpc.Result[document.DocumentGetResult, types.DocumentError], error) {
@@ -253,11 +251,10 @@ func (h *Handler) getCollectionFromContext(ctx context.Context) (*gocb.Collectio
 		linkName = "default"
 	}
 
-	if h.clusterConnections[sourceId] == nil || h.clusterConnections[sourceId][linkName] == nil {
+	collection, ok := h.links.Get(sourceId, linkName)
+	if !ok {
 		h.Logger.Warn("Received request from unlinked source", "sourceId", sourceId, "linkName", linkName)
 		return nil, fmt.Errorf("received request from unlinked source %s with link name %s", sourceId, linkName)
 	}
-
-	// NOTE: We just checked if this is nil above, so it's ensured that the collection is not nil
-	return h.clusterConnections[sourceId][linkName], nil
+	return collection, nil
 }

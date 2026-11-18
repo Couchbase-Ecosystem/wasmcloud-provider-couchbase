@@ -40,15 +40,7 @@ func (h *Handler) updateCouchbaseCluster(sourceId string, linkName string, conne
 		collection = bucket.DefaultCollection()
 	}
 
-	// Store the connection
-	if h.clusterConnections == nil {
-		h.clusterConnections = make(map[string]map[string]*gocb.Collection)
-	}
-	if h.clusterConnections[sourceId] == nil {
-		h.clusterConnections[sourceId] = make(map[string]*gocb.Collection)
-	}
-
-	h.clusterConnections[sourceId][linkName] = collection
+	h.links.Put(sourceId, linkName, collection)
 }
 
 // Provider handler functions
@@ -65,12 +57,7 @@ func (h *Handler) handleNewTargetLink(link provider.InterfaceLinkDefinition) err
 
 func (h *Handler) handleDelTargetLink(link provider.InterfaceLinkDefinition) error {
 	h.Logger.Info("Handling del target link", "link", link)
-	if connections, exists := h.clusterConnections[link.SourceID]; exists {
-		delete(connections, link.Name)
-		if len(connections) == 0 {
-			delete(h.clusterConnections, link.SourceID)
-		}
-	}
+	h.links.Delete(link.SourceID, link.Name)
 	return nil
 }
 
@@ -81,6 +68,6 @@ func (h *Handler) handleHealthCheck() string {
 
 func (h *Handler) handleShutdown() error {
 	h.Logger.Info("Handling shutdown")
-	clear(h.clusterConnections)
+	h.links.Clear()
 	return nil
 }
