@@ -11,7 +11,6 @@ import (
 	"syscall"
 
 	wrpc "github.com/couchbase-examples/wasmcloud-provider-couchbase/bindings"
-	"github.com/couchbase/gocb/v2"
 	"go.wasmcloud.dev/provider"
 )
 
@@ -38,7 +37,7 @@ func run() error {
 
 	// Initialize the provider with callbacks to track linked components
 	providerHandler := Handler{
-		clusterConnections: make(map[string]map[string]*gocb.Collection),
+		links: newLinkedCollections(),
 	}
 
 	p, err := provider.New(
