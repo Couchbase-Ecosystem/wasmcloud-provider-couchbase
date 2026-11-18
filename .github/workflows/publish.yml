@@ -26,7 +26,7 @@ jobs:
       matrix:
         cfg:
           - wash-version: 0.37.0
-            go-version: 1.23.4
+            go-version: 1.26.11
             tinygo-version: 0.34.0
             wit-bindgen-wrpc-version: 0.14.0
     steps:
